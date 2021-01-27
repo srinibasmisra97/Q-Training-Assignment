@@ -1,0 +1,111 @@
+VPC Network:
+    name: tf-q-training
+    region: us-central1
+    subnets:
+        name: tf-us-central1
+        ip-range: 10.120.0.0/20
+
+GCP VPC Firewall Rule:
+    name: tf-q-training-5000-5022
+    network: tf-q-training
+    target: all-instances
+    sources: 0.0.0.0/0
+    ports:
+        tcp: 5000, 5022
+
+    name: tf-q-training-allow-iap
+    network: tf-q-training
+    target: all-instances
+    sources: 35.235.240.0/20
+    ports:
+        tcp: 22
+
+Static IP:
+    name: tf-training-app
+
+GCE VM:
+    name: tf-q-training
+    type: e2-micro
+    network: tf-q-training
+    static ip: tf-training-app
+    image: q-training-app
+    network-tags: http-server, https-server, q-training-server
+
+Unmanaged Instance Group:
+    name: tf-training-apps
+    network: tf-q-training
+    subnet: us-central1
+    vm-instances: tf-q-training
+    port-mapping:
+        name: http
+        port: 80
+
+        name: app1
+        port: 5000
+
+        name: app2
+        port: 5022
+
+GCP Compute Health Checks
+    name: tf-app1
+    protocol: tcp
+    port: 5000
+    timeout: 5
+    interval: 10
+
+    name: tf-app2
+    protocol: tcp
+    port: 5022
+    timeout: 5
+    interval: 10
+
+    name: tf-default-nginx
+    protocol: http
+    port: 80
+    request_path: /
+    timeout: 5
+    interval: 10
+
+GCP Compute Backend Services
+    name: tf-app1
+    health_check: tf-app1
+    backend:
+        group: tf-training-apps
+        port_name: app1
+        protocol: http
+    
+    name: tf-app2
+    health_check: tf-app2
+    backend:
+        group: tf-training-apps
+        port_name: app2
+        protocol: http
+    
+    name: tf-default-nginx
+    health_check: tf-default-nginx
+    backend:
+        group: tf-training-apps
+        port_name: http
+        protocol: http
+
+GCP Compute URL Map
+    name: tf-urlmap
+    default_backend: tf-default-nginx
+    map:
+        host: app1.q-training-tf.tk
+        paths: /*
+        backend: tf-app1
+
+        host: app2.q-training-tf.tk
+        paths: /*
+        backend: tf-app2
+
+GCP Target HTTP Proxy
+    name: tf-training-apps-target-http-proxy
+    urlmap: tf-urlmap
+
+GCP Forwarding Rule:
+    name: tf-training-apps-http-forwarding-rule
+    target: tf-training-apps-target-http-proxy
+    port_range: 80
+    ip_address: tf-training-app
