@@ -173,6 +173,20 @@ resource "google_compute_target_http_proxy" "target_http_proxy" {
     url_map = google_compute_url_map.urlmap.id
 }
 
+resource "google_compute_managed_ssl_certificate" "ssl_certificate" {
+    name = "tf-training-app-cert"
+
+    managed {
+        domains = ["app1.q-training-tf.tk", "app2.q-training-tf.tk"]
+    }
+}
+
+resource "google_compute_target_https_proxy" "target_https_proxy" {
+    name = "tf-training-apps-target-https-proxy"
+    url_map = google_compute_url_map.urlmap.id
+    ssl_certificates = [google_compute_managed_ssl_certificate.ssl_certificate.id]
+}
+
 data "google_compute_global_address" "loadbalancer_static_ip" {
     name = "tf-training-app"
 }
@@ -181,5 +195,12 @@ resource "google_compute_global_forwarding_rule" "http_frontend" {
     name = "tf-training-apps-http-forwarding-rule"
     target = google_compute_target_http_proxy.target_http_proxy.id
     port_range = "80"
+    ip_address = data.google_compute_global_address.loadbalancer_static_ip.address
+}
+
+resource "google_compute_global_forwarding_rule" "https_frontend" {
+    name = "tf-training-apps-https-forwarding-rule"
+    target = google_compute_target_https_proxy.target_https_proxy.id
+    port_range = "443"
     ip_address = data.google_compute_global_address.loadbalancer_static_ip.address
 }
