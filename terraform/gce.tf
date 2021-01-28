@@ -1,16 +1,10 @@
-# Google Provider
-provider "google" {
-    project = "dev-trials-q"
-    credentials = file("/home/srinibas_misra/.gcp-keys/terraform.json")
-    region  = "us-central1"
-    zone    = "us-central1-a"
-}
-
+# VPC Network
 resource "google_compute_network" "vpc_network" {
   name = "tf-q-training"
   auto_create_subnetworks = false
 }
 
+# VPC Network Subnet
 resource "google_compute_subnetwork" "vpc_network_subnet" {
   name          = "tf-us-central1"
   ip_cidr_range = "10.120.0.0/20"
@@ -18,6 +12,7 @@ resource "google_compute_subnetwork" "vpc_network_subnet" {
   network       = google_compute_network.vpc_network.id
 }
 
+# VPC Network Firewall Rules
 resource "google_compute_firewall" "firewall_allow_app_ports" {
     name = "tf-q-training-5000-5022"
     network = google_compute_network.vpc_network.name
@@ -44,11 +39,13 @@ resource "google_compute_firewall" "firewall_allow_iap" {
     source_ranges = ["35.235.240.0/20"]
 }
 
+# Data OS Image
 data "google_compute_image" "q_training_image" {
     project = "dev-trials-q"
     name = "q-training-app"
 }
 
+# GCE VM Instance
 resource "google_compute_instance" "q_training_server" {
     name = "tf-q-training"
     machine_type = "e2-micro"
@@ -71,6 +68,7 @@ resource "google_compute_instance" "q_training_server" {
     }
 }
 
+# GCE Unmanaged Instance Group
 resource "google_compute_instance_group" "unmanaged_group" {
     name = "tf-training-apps"
     zone = "us-central1-a"
@@ -92,6 +90,8 @@ resource "google_compute_instance_group" "unmanaged_group" {
     }
 }
 
+# GCP HTTP(s) Load Balancer
+# GCP Compute Health Check
 resource "google_compute_health_check" "app1_tcp_health_check" {
     name = "tf-app1"
 
@@ -114,6 +114,7 @@ resource "google_compute_health_check" "app2_tcp_health_check" {
     }
 }
 
+# GCP Backend Service
 resource "google_compute_backend_service" "app1_backend" {
     name = "tf-app1"
     
@@ -142,6 +143,7 @@ resource "google_compute_backend_service" "app2_backend" {
     }
 }
 
+# GCP URL Map
 resource "google_compute_url_map" "urlmap" {
     name = "tf-training-app"
 
@@ -168,11 +170,13 @@ resource "google_compute_url_map" "urlmap" {
     }
 }
 
+# GCP Target HTTP Proxy
 resource "google_compute_target_http_proxy" "target_http_proxy" {
     name = "tf-training-apps-target-http-proxy"
     url_map = google_compute_url_map.urlmap.id
 }
 
+# GCP Managed SSL Certificate
 resource "google_compute_managed_ssl_certificate" "ssl_certificate" {
     name = "tf-training-app-cert"
 
@@ -181,16 +185,19 @@ resource "google_compute_managed_ssl_certificate" "ssl_certificate" {
     }
 }
 
+# GCP Target HTTPS Proxy
 resource "google_compute_target_https_proxy" "target_https_proxy" {
     name = "tf-training-apps-target-https-proxy"
     url_map = google_compute_url_map.urlmap.id
     ssl_certificates = [google_compute_managed_ssl_certificate.ssl_certificate.id]
 }
 
+# Global Static IP
 data "google_compute_global_address" "loadbalancer_static_ip" {
     name = "tf-training-app"
 }
 
+# GCP Global Forwarding Rule
 resource "google_compute_global_forwarding_rule" "http_frontend" {
     name = "tf-training-apps-http-forwarding-rule"
     target = google_compute_target_http_proxy.target_http_proxy.id
