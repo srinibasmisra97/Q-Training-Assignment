@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: training-python
+  name: training-python
+  namespace: q-training
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: training-python
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: training-python
+      name: training-python
+    spec:
+      containers:
+        - name: python-app
+          image: us.gcr.io/dev-trials-q/training-python-app:v1.0
+          ports:
+            - containerPort: 5000
+          livenessProbe:
+            httpGet:
+              port: 5000
+              path: /
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              port: 5000
+              path: /
+            initialDelaySeconds: 3
+            periodSeconds: 5
