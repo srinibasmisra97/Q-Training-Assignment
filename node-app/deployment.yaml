@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: node-app
-          image: us.gcr.io/dev-trials-q/training-node-app:v1.0
+          image: us.gcr.io/dev-trials-q/training-node-app:v1.1
           ports:
             - containerPort: 5022
           livenessProbe:

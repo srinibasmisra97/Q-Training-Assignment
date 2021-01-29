@@ -6,4 +6,4 @@ WORKDIR /app
 
 COPY ./ /app
 
-ENTRYPOINT ["node", "app.js"]
+CMD ["node", "app.js"]
