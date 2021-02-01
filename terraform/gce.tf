@@ -1,54 +1,54 @@
 # VPC Network
 resource "google_compute_network" "vpc_network" {
-  name = "tf-q-training"
+  name = "${var.environment}-${var.vpc_network_subnet_name}"
   auto_create_subnetworks = false
 }
 
 # VPC Network Subnet
 resource "google_compute_subnetwork" "vpc_network_subnet" {
-  name          = "tf-us-central1"
-  ip_cidr_range = "10.120.0.0/20"
-  region        = "us-central1"
+  name          = "${var.environment}-${var.vpc_network_subnet_name}"
+  ip_cidr_range = var.vpc_network_subnet_cidr
+  region        = var.vpc_network_subnet_region
   network       = google_compute_network.vpc_network.id
 }
 
 # VPC Network Firewall Rules
 resource "google_compute_firewall" "firewall_allow_app_ports" {
-    name = "tf-q-training-5000-5022"
+    name = "${var.environment}-${var.firewall_allow_app_ports.name}"
     network = google_compute_network.vpc_network.name
 
     allow {
-        protocol = "tcp"
-        ports = ["5000", "5022"]
+        protocol = var.firewall_allow_app_ports.allow_protocol
+        ports = var.firewall_allow_app_ports.allow_ports
     }
 
-    source_ranges = ["0.0.0.0/0"]
+    source_ranges = var.firewall_allow_app_ports.source_ranges
 
-    target_tags = ["q-training-server"]
+    target_tags = var.firewall_allow_app_ports.target_tags
 }
 
 resource "google_compute_firewall" "firewall_allow_iap" {
-    name = "tf-q-training-allow-iap"
+    name = "${var.environment}-${var.firewall_allow_iap.name}"
     network = google_compute_network.vpc_network.name
 
     allow {
-        protocol = "tcp"
-        ports = ["22"]
+        protocol = var.firewall_allow_iap.allow_protocol
+        ports = var.firewall_allow_iap.allow_ports
     }
 
-    source_ranges = ["35.235.240.0/20"]
+    source_ranges = var.firewall_allow_iap.source_ranges
 }
 
 # Data OS Image
 data "google_compute_image" "q_training_image" {
-    project = "dev-trials-q"
-    name = "q-training-app"
+    project = var.gcp_project
+    name = var.vm_instance.image_name
 }
 
 # GCE VM Instance
 resource "google_compute_instance" "q_training_server" {
-    name = "tf-q-training"
-    machine_type = "e2-micro"
+    name = "${var.environment}-${var.vm_instance.name}"
+    machine_type = var.vm_instance.machine_type
 
     boot_disk {
         initialize_params {
@@ -56,7 +56,7 @@ resource "google_compute_instance" "q_training_server" {
         }
     }
 
-    tags = ["http-server", "https-server", "q-training-server"]
+    tags = var.vm_instance.network_tags
 
     network_interface {
         network = google_compute_network.vpc_network.self_link
@@ -70,59 +70,53 @@ resource "google_compute_instance" "q_training_server" {
 
 # GCE Unmanaged Instance Group
 resource "google_compute_instance_group" "unmanaged_group" {
-    name = "tf-training-apps"
-    zone = "us-central1-a"
+    name = "${var.environment}-${var.vm_unmanaged_instance_group.name}"
+    zone = var.gcp_zone
     instances = [google_compute_instance.q_training_server.id]
 
-    named_port {
-        name = "http"
-        port = "80"
-    }
+    dynamic "named_port" {
+        for_each = var.vm_unmanaged_instance_group.named_ports
 
-    named_port {
-        name = "app1"
-        port = "5000"
-    }
-
-    named_port {
-        name = "app2"
-        port = "5022"
+        content {
+            name = named_port.value["name"]
+            port = named_port.value["port"]
+        }
     }
 }
 
 # GCP HTTP(s) Load Balancer
 # GCP Compute Health Check
 resource "google_compute_health_check" "app1_tcp_health_check" {
-    name = "tf-app1"
+    name = "${var.environment}-${var.lb_health_check_app1.name}"
 
-    timeout_sec = 5
-    check_interval_sec = 10
+    timeout_sec = var.lb_health_check_app1.timeout_sec
+    check_interval_sec = var.lb_health_check_app1.check_interval_sec
 
     tcp_health_check {
-        port = "5000"
+        port = var.lb_health_check_app1.port
     }
 }
 
 resource "google_compute_health_check" "app2_tcp_health_check" {
-    name = "tf-app2"
+    name = "${var.environment}-${var.lb_health_check_app2.name}"
 
-    timeout_sec = 5
-    check_interval_sec = 10
+    timeout_sec = var.lb_health_check_app2.timeout_sec
+    check_interval_sec = var.lb_health_check_app2.check_interval_sec
 
     tcp_health_check {
-        port = "5022"
+        port = var.lb_health_check_app2.port
     }
 }
 
 # GCP Backend Service
 resource "google_compute_backend_service" "app1_backend" {
-    name = "tf-app1"
+    name = "${var.environment}-${var.lb_backend_app1.name}"
     
     health_checks = [google_compute_health_check.app1_tcp_health_check.id]
 
-    port_name = "app1"
+    port_name = var.lb_backend_app1.port_name
 
-    protocol = "HTTP"
+    protocol = var.lb_backend_app1.protocol
 
     backend {
         group = google_compute_instance_group.unmanaged_group.self_link
@@ -130,13 +124,13 @@ resource "google_compute_backend_service" "app1_backend" {
 }
 
 resource "google_compute_backend_service" "app2_backend" {
-    name = "tf-app2"
+    name = "${var.environment}-${var.lb_backend_app2.name}"
 
     health_checks = [google_compute_health_check.app2_tcp_health_check.id]
 
-    port_name = "app2"
+    port_name = var.lb_backend_app2.port_name
 
-    protocol = "HTTP"
+    protocol = var.lb_backend_app2.protocol
 
     backend {
         group = google_compute_instance_group.unmanaged_group.self_link
