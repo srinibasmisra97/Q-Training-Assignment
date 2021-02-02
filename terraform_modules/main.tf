@@ -19,6 +19,8 @@ module "firewall_rules" {
     allow_ports = var.firewall_rules[count.index].allow_ports
     source_ranges = var.firewall_rules[count.index].source_ranges
     target_tags = var.firewall_rules[count.index].target_tags
+
+    depends_on = [ module.network ]
 }
 
 module "vm_instance" {
@@ -30,6 +32,8 @@ module "vm_instance" {
     tags = var.vm_instance.network_tags
     subnet = "${var.environment}-${var.vm_instance.subnet}"
     subnet_region = var.subnet_region
+
+    depends_on = [ module.network ]
 }
 
 module "unmanaged_group" {
@@ -42,4 +46,6 @@ module "unmanaged_group" {
     instances = formatlist("${var.environment}-%s", var.unmanaged_group.instances)
 
     named_ports = var.unmanaged_group.named_ports
+
+    depends_on = [ module.vm_instance, module.network, module.firewall_rules ]
 }
