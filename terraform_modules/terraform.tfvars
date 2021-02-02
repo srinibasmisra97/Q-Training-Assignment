@@ -1,3 +1,5 @@
+gcp_project = "dev-trials-q"
+
 vpc_network_name = "tf-q-training"
 subnet_name = "tf-us-central1"
 subnet_cidr = "10.120.0.0/20"
@@ -29,4 +31,15 @@ vm_instance = {
     network_tags = ["http-server", "https-server", "q-training-server"]
     network = "tf-q-training"
     subnet = "tf-us-central1"
+}
+
+unmanaged_group = {
+    name = "tf-training-apps"
+    zone = "us-central1-a"
+    instances = ["tf-q-training"]
+    named_ports = [
+        {name = "http", port = "80"},
+        {name = "app1", port = "5000"},
+        {name = "app2", port = "5022"}
+    ]
 }

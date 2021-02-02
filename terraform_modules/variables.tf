@@ -1,5 +1,7 @@
 variable "environment" {}
 
+variable "gcp_project" {}
+
 variable "vpc_network_name" {}
 variable "subnet_name" {}
 variable "subnet_cidr" {}
@@ -23,5 +25,17 @@ variable "vm_instance" {
         machine_type = string
         network_tags = list(string)
         subnet = string
+    })
+}
+
+variable "unmanaged_group" {
+    type = object({
+        name = string
+        zone = string
+        instances = list(string)
+        named_ports = list(object({
+            name = string
+            port = string
+        }))
     })
 }

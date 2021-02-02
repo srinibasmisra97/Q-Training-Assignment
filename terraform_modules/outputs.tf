@@ -25,3 +25,7 @@ output "vm_internal_ip" {
 output "vm_external_ip" {
     value = module.vm_instance.external_ip
 }
+
+output "group_id" {
+    value = module.unmanaged_group.group_id
+}

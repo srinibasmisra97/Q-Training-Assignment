@@ -31,3 +31,15 @@ module "vm_instance" {
     subnet = "${var.environment}-${var.vm_instance.subnet}"
     subnet_region = var.subnet_region
 }
+
+module "unmanaged_group" {
+    source = "./modules/unmanaged_group"
+
+    name = "${var.environment}-${var.unmanaged_group.name}"
+    zone = var.unmanaged_group.zone
+    gcp_project = var.gcp_project
+
+    instances = formatlist("${var.environment}-%s", var.unmanaged_group.instances)
+
+    named_ports = var.unmanaged_group.named_ports
+}
