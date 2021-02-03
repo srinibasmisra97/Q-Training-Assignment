@@ -47,25 +47,29 @@ variable "target_http_proxy" {
     default = "target_http_proxy"
 }
 
-# variable "target_https_proxy" {
-#     type = object({
-#         name = string
-#         certificate = string
-#     })
-# }
+variable "target_https_proxy" {
+    type = object({
+        name = string
+        certificate = string
+    })
 
-# variable "ssl" {
-#     type = bool
+    default = null
+}
 
-#     default = false
-# }
+variable "ssl" {
+    type = bool
 
-# variable "ssl_certificates" {
-#     type = list(object({
-#         name = string
-#         domains = list(string)
-#     }))
-# }
+    default = false
+}
+
+variable "ssl_certificate" {
+    type = object({
+        name = string
+        domains = list(string)
+    })
+
+    default = null
+}
 
 variable "frontends" {
     type = list(object({

@@ -76,14 +76,36 @@ data "google_compute_global_address" "loadbalancer_static_ip" {
     name = var.static_ip
 }
 
+# Managed SSL Certificate
+resource "google_compute_managed_ssl_certificate" "ssl_certificate" {
+    count = var.ssl ? 1 : 0
+
+    name = var.ssl_certificate.name
+
+    managed {
+        domains = var.ssl_certificate.domains
+    }
+}
+
+# Target HTTPS Proxy
+resource "google_compute_target_https_proxy" "target_https_proxy" {
+    count = var.ssl ? 1 : 0
+
+    name = var.target_https_proxy.name
+    url_map = google_compute_url_map.url_map.id
+    ssl_certificates = [ google_compute_managed_ssl_certificate.ssl_certificate[count.index].id ]
+
+    depends_on = [ google_compute_url_map.url_map ]
+}
+
 # HTTP Frontend
 resource "google_compute_global_forwarding_rule" "frontends" {
     count = length(var.frontends)
 
     name = var.frontends[count.index].name
-    target = "projects/${var.gcp_project}/global/targetHttpProxies/${var.frontends[count.index].target}"
+    target = var.frontends[count.index].port == "443" ? "projects/${var.gcp_project}/global/targetHttpsProxies/${var.frontends[count.index].target}" : "projects/${var.gcp_project}/global/targetHttpProxies/${var.frontends[count.index].target}"
     port_range = var.frontends[count.index].port
     ip_address = data.google_compute_global_address.loadbalancer_static_ip.address
 
-    depends_on = [ google_compute_target_http_proxy.target_http_proxy ]
+    depends_on = [ google_compute_target_http_proxy.target_http_proxy, google_compute_target_https_proxy.target_https_proxy ]
 }

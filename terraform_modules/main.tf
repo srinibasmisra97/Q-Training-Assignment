@@ -62,5 +62,9 @@ module "load_balancer" {
     target_http_proxy = var.load_balancer.target_http_proxy
     frontends = var.load_balancer.frontends
 
+    ssl = var.load_balancer.ssl
+    ssl_certificate = var.load_balancer.ssl_certificate
+    target_https_proxy = var.load_balancer.target_https_proxy
+
     depends_on = [ module.unmanaged_group ]
 }

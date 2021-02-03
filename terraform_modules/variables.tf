@@ -72,6 +72,16 @@ variable "load_balancer" {
         static_ip = string
         target_http_proxy = string
 
+        ssl = bool
+        ssl_certificate = object({
+            name = string
+            domains = list(string)
+        })
+        target_https_proxy = object({
+            name = string
+            certificate = string
+        })
+
         frontends = list(object({
             name = string
             target = string

@@ -71,7 +71,18 @@ load_balancer = {
     static_ip = "tf-training-app"
     target_http_proxy = "tf-training-apps-target-http-proxy"
 
+    ssl = true
+    target_https_proxy = {
+        name = "tf-training-apps-target-https-proxy",
+        certificate = "tf-training-certificate"
+    }
+    ssl_certificate = {
+        name = "tf-training-certificate",
+        domains = ["app1.q-training-tf-modules.tk", "app2.q-training-tf-modules.tk"]
+    }
+
     frontends = [
-        {name = "tf-training-apps-target-http-proxy", target = "tf-training-apps-target-http-proxy", port = "80"}
+        {name = "tf-training-http-frontend", target = "tf-training-apps-target-http-proxy", port = "80"},
+        {name = "tf-training-https-frontend", target = "tf-training-apps-target-https-proxy", port = "443"}
     ]
 }
