@@ -86,3 +86,15 @@ load_balancer = {
         {name = "tf-training-https-frontend", target = "tf-training-apps-target-https-proxy", port = "443"}
     ]
 }
+
+gke_cluster = {
+    service_account = "tf-gke-nodes"
+    cluster_name = "tf-q-training"
+    node_pool_name = "training-app-pool"
+    node_pool_location = "us-central1-a"
+    node_pool_count = 1
+    node_config = {
+        preemptible = true
+        machine_type = "e2-micro"
+    }
+}

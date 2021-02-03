@@ -68,3 +68,18 @@ module "load_balancer" {
 
     depends_on = [ module.unmanaged_group ]
 }
+
+module "gke_cluster" {
+    source = "./modules/gke_cluster"
+
+    gcp_project = var.gcp_project
+    service_account = var.gke_cluster.service_account
+    cluster_name = var.gke_cluster.cluster_name
+    node_pool_name = var.gke_cluster.node_pool_name
+    node_pool_location = var.gke_cluster.node_pool_location
+    node_pool_count = var.gke_cluster.node_pool_count
+    node_config = {
+        preemptible = var.gke_cluster.node_config.preemptible
+        machine_type = var.gke_cluster.node_config.machine_type
+    }
+}

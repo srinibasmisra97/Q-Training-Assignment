@@ -41,3 +41,19 @@ output "proxy_id" {
 output "loadbalancer_ip" {
     value = module.load_balancer.loadbalancer_ip
 }
+
+output "node_service_account" {
+    value = module.gke_cluster.node_service_account
+}
+
+output "cluster_endpoint" {
+    value = module.gke_cluster.cluster_endpoint
+}
+
+output "cluster_instance_group_urls" {
+    value = module.gke_cluster.cluster_instance_group_urls
+}
+
+output "node_pool_instance_group_urls" {
+    value = module.gke_cluster.node_pool_instance_group_urls
+}

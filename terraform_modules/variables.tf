@@ -89,3 +89,17 @@ variable "load_balancer" {
         }))
     })
 }
+
+variable "gke_cluster" {
+    type = object({
+        service_account = string
+        cluster_name = string
+        node_pool_name = string
+        node_pool_location = string
+        node_pool_count = number
+        node_config = object({
+            preemptible = bool
+            machine_type = string
+        })
+    })
+}
