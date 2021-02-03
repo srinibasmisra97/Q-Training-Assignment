@@ -43,3 +43,35 @@ unmanaged_group = {
         {name = "app2", port = "5022"}
     ]
 }
+
+load_balancer = {
+    health_checks = [
+        {name = "tf-app1", timeout_sec = 5, check_interval_sec = 10, tcp_port = 5000},
+        {name = "tf-app2", timeout_sec = 5, check_interval_sec = 10, tcp_port = 5022}
+    ]
+
+    backends = [
+        {name = "tf-app1", health_check = "tf-app1", port_name = "app1", protocol = "HTTP", instance_group = "tf-training-apps", zone = "us-central1-a"},
+        {name = "tf-app2", health_check = "tf-app2", port_name = "app2", protocol = "HTTP", instance_group = "tf-training-apps", zone = "us-central1-a"}
+    ]
+
+    url_map = {
+        name = "tf-q-training"
+        default_service = "tf-app1"
+        host_rules = [
+            {hosts = ["app1.q-training-tf-modules.tk"], path_matcher = "app1-path-matcher"},
+            {hosts = ["app2.q-training-tf-modules.tk"], path_matcher = "app2-path-matcher"}
+        ]
+        path_matchers = [
+            {name = "app1-path-matcher", service = "tf-app1"},
+            {name = "app2-path-matcher", service = "tf-app2"}
+        ]
+    }
+
+    static_ip = "tf-training-app"
+    target_http_proxy = "tf-training-apps-target-http-proxy"
+
+    frontends = [
+        {name = "tf-training-apps-target-http-proxy", target = "tf-training-apps-target-http-proxy", port = "80"}
+    ]
+}

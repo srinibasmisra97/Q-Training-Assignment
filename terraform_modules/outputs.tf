@@ -29,3 +29,15 @@ output "vm_external_ip" {
 output "group_id" {
     value = module.unmanaged_group.group_id
 }
+
+output "url_map_id" {
+    value = module.load_balancer.url_map_id
+}
+
+output "proxy_id" {
+    value = module.load_balancer.proxy_id
+}
+
+output "loadbalancer_ip" {
+    value = module.load_balancer.loadbalancer_ip
+}

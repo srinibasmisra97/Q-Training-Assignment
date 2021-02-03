@@ -1,5 +1,3 @@
-variable "environment" {}
-
 variable "gcp_project" {}
 
 variable "vpc_network_name" {}
@@ -35,6 +33,48 @@ variable "unmanaged_group" {
         instances = list(string)
         named_ports = list(object({
             name = string
+            port = string
+        }))
+    })
+}
+
+variable "load_balancer" {
+    type = object({
+        health_checks = list(object({
+            name = string
+            timeout_sec = number
+            check_interval_sec = number
+            tcp_port = number
+        }))
+
+        backends = list(object({
+            name = string
+            health_check = string
+            port_name = string
+            protocol = string
+            instance_group = string
+            zone = string
+        }))
+
+        url_map = object({
+            name = string
+            default_service = string
+            host_rules = list(object({
+                hosts = list(string)
+                path_matcher = string
+            }))
+            path_matchers = list(object({
+                name = string
+                service = string
+            }))
+        })
+
+        static_ip = string
+        target_http_proxy = string
+
+        frontends = list(object({
+            name = string
+            target = string
             port = string
         }))
     })
