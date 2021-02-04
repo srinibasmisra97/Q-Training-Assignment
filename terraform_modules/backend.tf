@@ -2,6 +2,6 @@
 terraform {
     backend "gcs" {
         bucket = "dev-trials-q-terraform-state-backup"
-        credentials = "C:\\Users\\Srinibas Mishra\\Documents\\Training Files\\terraform-state-backup.json"
+        credentials = "C:\\Users\\Srinibas Mishra\\Documents\\Q-Training-Assignment\\terraform-state-backup.json"
     }
 }

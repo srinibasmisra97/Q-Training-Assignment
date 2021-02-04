@@ -2,3 +2,5 @@ terraform/.terraform/
 terraform/.terraform.lock.hcl
 terraform_modules/.terraform/
 terraform_modules/.terraform.lock.hcl
+terraform-state-backup.json
+terraform.json
